@@ -1,7 +1,10 @@
-mod token;
+mod jdiesel;
 mod scanner;
 
-use std::{env, fs, io::{self, Write}};
+use std::{
+    env, fs,
+    io::{self, Write},
+};
 
 use crate::scanner::Scanner;
 
@@ -33,7 +36,7 @@ fn run_prompt() {
 
 fn run(source: String) {
     let scanner = Scanner::new(source);
-    
+
     for token in scanner {
         println!("{:?}", token);
     }
