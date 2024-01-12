@@ -1,3 +1,6 @@
+pub mod token;
+pub mod scanner;
+
 use std::ops::{Sub, SubAssign};
 
 #[derive(Debug, Clone)]

@@ -1,5 +1,6 @@
-use not_pseudocode::Position;
 use phf::phf_map;
+
+use crate::Position;
 
 #[derive(Debug)]
 pub struct Token {

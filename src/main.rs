@@ -1,9 +1,6 @@
-mod token;
-mod scanner;
-
 use std::{env, fs, io::{self, Write}};
 
-use crate::scanner::Scanner;
+use not_pseudocode::scanner::Scanner;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

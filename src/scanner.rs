@@ -1,6 +1,4 @@
-use not_pseudocode::Position;
-
-use crate::token::{Token, TokenType, self};
+use crate::{token::{Token, TokenType, self}, Position};
 
 pub struct Scanner {
     source: String,
