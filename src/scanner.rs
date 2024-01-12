@@ -1,6 +1,6 @@
 use crate::{
     token::{self, Token, TokenType},
-    Position,
+    Position, error::PseudoError,
 };
 
 pub type Result<T> = std::result::Result<T, PseudoError>;
@@ -228,6 +228,7 @@ impl Scanner {
     fn construct_token_owned(&self, token: TokenType, start_position: Position) -> Token {
         Token::new_owned_position(token, start_position, &self.position)
     }
+    
     fn construct_token(&self, token: TokenType, start_position: &Position) -> Token {
         Token::new(token, start_position, &self.position)
     }
