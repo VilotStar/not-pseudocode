@@ -1,4 +1,7 @@
-use std::{env, fs, io::{self, Write}};
+use std::{
+    env, fs,
+    io::{self, Write},
+};
 
 use not_pseudocode::scanner::Scanner;
 
@@ -30,7 +33,7 @@ fn run_prompt() {
 
 fn run(source: String) {
     let scanner = Scanner::new(source);
-    
+
     for token in scanner {
         println!("{:?}", token);
     }

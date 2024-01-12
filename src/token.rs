@@ -5,14 +5,24 @@ use crate::Position;
 #[derive(Debug)]
 pub struct Token {
     r#type: TokenType,
-    position: (Position, Position)
+    position: (Position, Position),
 }
 
 impl Token {
+    pub fn new_owned_position(
+        r#type: TokenType,
+        start_position: Position,
+        end_position: &Position,
+    ) -> Self {
+        Self {
+            r#type,
+            position: (start_position, end_position.clone()),
+        }
+    }
     pub fn new(r#type: TokenType, start_position: &Position, end_position: &Position) -> Self {
         Self {
             r#type,
-            position: (start_position.clone(), end_position.clone())
+            position: (start_position.clone(), end_position.clone()),
         }
     }
 }
@@ -20,23 +30,55 @@ impl Token {
 #[derive(Debug, Clone)]
 pub enum TokenType {
     // Single-character tokens
-    LPAREN, RPAREN, LBRACE, RBRACE,
-    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+    LPAREN,
+    RPAREN,
+    LBRACE,
+    RBRACE,
+    COMMA,
+    DOT,
+    MINUS,
+    PLUS,
+    SEMICOLON,
+    SLASH,
+    STAR,
     // One or two character tokens
     NEQUAL,
-    EQUAL, EEQUAL,
-    GREATER, GEQUAL,
-    LESS, LEQUAL,
+    EQUAL,
+    EEQUAL,
+    GREATER,
+    GEQUAL,
+    LESS,
+    LEQUAL,
     // Literals
-    IDENTIFIER(Box<str>), STRING(Box<str>),
-    INTEGER(i128), FLOAT(f64),
+    IDENTIFIER(Box<str>),
+    STRING(Box<str>),
+    INTEGER(i128),
+    FLOAT(f64),
     // Keywords
-    AND, NOT, CLASS, FALSE, TRUE, FUNCTION, ENDFUNCTION, FOR, NEXT, IF, ELSEIF, ELSE, ENDIF, OR,
-    PRINT, RETURN, WHILE, ENDWHILE,
+    AND,
+    NOT,
+    CLASS,
+    FALSE,
+    TRUE,
+    FUNCTION,
+    ENDFUNCTION,
+    FOR,
+    NEXT,
+    IF,
+    ELSEIF,
+    ELSE,
+    ENDIF,
+    OR,
+    PRINT,
+    RETURN,
+    WHILE,
+    ENDWHILE,
     // Bullshit
-    COMMENT, WHITESPACE, NEWLINE,
+    COMMENT,
+    WHITESPACE,
+    NEWLINE,
     // End Of File
-    EOF
+    EOF,
 }
 
 pub static KEYWORDS: phf::Map<&'static str, TokenType> = phf_map! {
@@ -60,6 +102,6 @@ pub static KEYWORDS: phf::Map<&'static str, TokenType> = phf_map! {
     "endwhile" => TokenType::ENDWHILE
 };
 
-pub fn parse_keyword(keyword: &str) -> Option<TokenType> {
-    KEYWORDS.get(keyword).cloned()
+pub fn parse_keyword(keyword: &str) -> Option<&TokenType> {
+    KEYWORDS.get(&keyword.to_lowercase())
 }

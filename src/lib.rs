@@ -1,19 +1,19 @@
 pub mod error;
-pub mod token;
 pub mod scanner;
+pub mod token;
 
 use std::ops::{Sub, SubAssign};
 
 #[derive(Debug, Clone)]
 pub struct Position {
-    pub line: usize,
-    pub column: usize
+    pub line: u32,
+    pub column: u32,
 }
 
-impl Sub<usize> for Position {
+impl Sub<u32> for Position {
     type Output = Position;
 
-    fn sub(mut self, rhs: usize) -> Self::Output {
+    fn sub(mut self, rhs: u32) -> Self::Output {
         if self.column == 1 {
             self.line.sub_assign(rhs);
         } else {
