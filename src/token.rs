@@ -102,6 +102,6 @@ pub static KEYWORDS: phf::Map<&'static str, TokenType> = phf_map! {
     "endwhile" => TokenType::ENDWHILE
 };
 
-pub fn parse_keyword(keyword: &str) -> Option<TokenType> {
-    KEYWORDS.get(keyword).cloned()
+pub fn parse_keyword(keyword: &str) -> Option<&TokenType> {
+    KEYWORDS.get(&keyword.to_lowercase())
 }

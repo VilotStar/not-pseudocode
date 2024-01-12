@@ -222,7 +222,7 @@ impl Scanner {
         let literal = &self.source[self.start..self.current];
 
         match token::parse_keyword(literal) {
-            Some(token_type) => self.construct_token_owned(token_type, start_position),
+            Some(token_type) => self.construct_token_owned(token_type.clone(), start_position),
             None => self
                 .construct_token_owned(TokenType::IDENTIFIER(Box::from(literal)), start_position),
         }
