@@ -32,6 +32,6 @@ fn run(source: String) {
     let scanner = Scanner::new(source);
     
     for token in scanner {
-        println!("{:#?}", token);
+        println!("{:?}", token);
     }
 }

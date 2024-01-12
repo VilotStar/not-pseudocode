@@ -1,4 +1,6 @@
-use crate::{token::{Token, TokenType, self}, Position};
+use crate::{token::{Token, TokenType, self}, Position, error::PseudoError};
+
+pub type Result<T> = std::result::Result<T, PseudoError>;
 
 pub struct Scanner {
     source: String,
@@ -34,7 +36,7 @@ impl Scanner {
         }
     }
 
-    fn scan_token(&mut self) -> Result<Token, ()> {
+    fn scan_token(&mut self) -> Result<Token> {
         let c = self.advance()?;
         match c {
             '(' => Ok(self.construct_token(TokenType::LPAREN, self.position.clone() - 1)),
@@ -101,8 +103,7 @@ impl Scanner {
             '0'..='9' => Ok(self.number(false)),
             'a'..='z' | 'A'..='Z' => Ok(self.identifier()),
             c => {
-                println!("Unexpected char, {}, at line {} col {}", c, self.position.line, self.position.column);
-                Err(()) // TODO: Error handling
+                Err(PseudoError::ScannerError(self.position.clone(), "Unexpected char".into()))
             }
         }
     }
@@ -111,9 +112,9 @@ impl Scanner {
         self.current >= self.source.len()
     }
 
-    fn advance(&mut self) -> Result<char, ()> {
+    fn advance(&mut self) -> Result<char> {
         if self.at_end() {
-            return Err(())
+            return Err(PseudoError::ScannerError(self.position.clone(), "Advanced at end of program".into()))
         }
         self.current += 1;
         self.position.column += 1;
@@ -127,9 +128,9 @@ impl Scanner {
         Some(self.source.chars().nth(self.current).unwrap())
     }
 
-    fn string(&mut self) -> Result<Token, ()> {
+    fn string(&mut self) -> Result<Token> {
         let start_position = self.position.clone();
-        while self.peek() != Some('"') {
+        while self.peek() != Some('"') && !self.at_end() {
             if self.peek() == Some('\n') {
                 self.position.line += 1;
                 self.position.column = 1;
@@ -138,14 +139,13 @@ impl Scanner {
         }
 
         if self.at_end() {
-            return Err(()); // TODO: Error handling // Unterminated string
+            return Err(PseudoError::ScannerError(self.position.clone(), "Unterminated string".into()));
         }
 
         self.advance()?;
 
         let value = &self.source[self.start + 1..self.current - 1];
-
-        Ok(self.construct_token(TokenType::STRING(Box::from(value)), start_position))
+        return Ok(self.construct_token(TokenType::STRING(Box::from(value)), start_position));
     }
 
     fn number(&mut self, initial: bool) -> Token {
