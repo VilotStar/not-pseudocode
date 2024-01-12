@@ -36,16 +36,6 @@ impl Scanner {
         }
     }
 
-    // pub fn scan_tokens(&mut self) {
-    //     while !self.at_end() {
-    //         self.start = self.current;
-    //         self.scan_token()
-    //     }
-
-    //     self.tokens.push(Token::new(TokenType::EOF, "".to_string(), &self.position));
-    //     // self.add_token(TokenType::EOF);
-    // }
-
     fn scan_token(&mut self) -> Result<Token, ()> {
         let c = self.advance()?;
         match c {
@@ -110,10 +100,11 @@ impl Scanner {
                 self.position.column = 1;
                 Ok(self.construct_token(TokenType::NEWLINE, self.position.clone() - 1))
             },
+            '0'..='9' => Ok(self.number(false)),
+            'a'..='z' | 'A'..='Z' => Ok(self.identifier()),
             c => {
-                if c.is_numeric() { Ok(self.number(false)) }
-                else if c.is_alphabetic() { Ok(self.identifier()) }
-                else { println!("Unexpected char, {}, at line {} col {}", c, self.position.line, self.position.column); Err(()) } // TODO: Error handling
+                println!("Unexpected char, {}, at line {} col {}", c, self.position.line, self.position.column);
+                Err(()) // TODO: Error handling
             }
         }
     }
@@ -198,7 +189,6 @@ impl Scanner {
     }
 
     fn construct_token(&mut self, token: TokenType, start_position: Position) -> Token {
-        //let text = &self.source[self.start..self.current];
         Token::new(token, &start_position, &self.position)
     }
 }
