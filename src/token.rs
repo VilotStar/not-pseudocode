@@ -4,14 +4,14 @@ use phf::phf_map;
 #[derive(Debug)]
 pub struct Token {
     r#type: TokenType,
-    position: Position
+    position: (Position, Position)
 }
 
 impl Token {
-    pub fn new(r#type: TokenType, position: &Position) -> Self {
+    pub fn new(r#type: TokenType, start_position: &Position, end_position: &Position) -> Self {
         Self {
             r#type,
-            position: position.clone()
+            position: (start_position.clone(), end_position.clone())
         }
     }
 }
