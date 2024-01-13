@@ -13,14 +13,11 @@ pub struct Scanner {
 }
 
 impl Iterator for Scanner {
-    type Item = Token;
+    type Item = Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.start = self.current;
-        match self.scan_token() {
-            Ok(token) => Some(token),
-            Err(_) => None,
-        }
+        Some(self.scan_token())
     }
 }
 
@@ -39,17 +36,17 @@ impl Scanner {
     fn scan_token(&mut self) -> Result<Token> {
         let c = self.advance()?;
         match c {
-            '(' => Ok(self.construct_token_owned(TokenType::LPAREN, self.position.clone() - 1)),
-            ')' => Ok(self.construct_token_owned(TokenType::RPAREN, self.position.clone() - 1)),
-            '{' => Ok(self.construct_token_owned(TokenType::LBRACE, self.position.clone() - 1)),
-            '}' => Ok(self.construct_token_owned(TokenType::RBRACE, self.position.clone() - 1)),
-            ',' => Ok(self.construct_token_owned(TokenType::COMMA, self.position.clone() - 1)),
-            '-' => Ok(self.construct_token_owned(TokenType::MINUS, self.position.clone() - 1)),
-            '+' => Ok(self.construct_token_owned(TokenType::PLUS, self.position.clone() - 1)),
+            '(' => Ok(self.construct_token(TokenType::LPAREN, self.position.clone() - 1)),
+            ')' => Ok(self.construct_token(TokenType::RPAREN, self.position.clone() - 1)),
+            '{' => Ok(self.construct_token(TokenType::LBRACE, self.position.clone() - 1)),
+            '}' => Ok(self.construct_token(TokenType::RBRACE, self.position.clone() - 1)),
+            ',' => Ok(self.construct_token(TokenType::COMMA, self.position.clone() - 1)),
+            '-' => Ok(self.construct_token(TokenType::MINUS, self.position.clone() - 1)),
+            '+' => Ok(self.construct_token(TokenType::PLUS, self.position.clone() - 1)),
             ';' => {
-                Ok(self.construct_token_owned(TokenType::SEMICOLON, self.position.clone() - 1))
+                Ok(self.construct_token(TokenType::SEMICOLON, self.position.clone() - 1))
             }
-            '*' => Ok(self.construct_token_owned(TokenType::STAR, self.position.clone() - 1)),
+            '*' => Ok(self.construct_token(TokenType::STAR, self.position.clone() - 1)),
             '!' => {
                 let start_position = self.position.clone();
                 let token = if self.peek() == Some('=') {
@@ -58,7 +55,7 @@ impl Scanner {
                 } else {
                     TokenType::NOT
                 };
-                Ok(self.construct_token_owned(token, start_position))
+                Ok(self.construct_token(token, start_position))
             }
             '=' => {
                 let start_position = self.position.clone();
@@ -68,7 +65,7 @@ impl Scanner {
                 } else {
                     TokenType::EQUAL
                 };
-                Ok(self.construct_token_owned(token, start_position))
+                Ok(self.construct_token(token, start_position))
             }
             '<' => {
                 let start_position = self.position.clone();
@@ -78,7 +75,7 @@ impl Scanner {
                 } else {
                     TokenType::LESS
                 };
-                Ok(self.construct_token_owned(token, start_position))
+                Ok(self.construct_token(token, start_position))
             }
             '>' => {
                 let start_position = self.position.clone();
@@ -88,7 +85,7 @@ impl Scanner {
                 } else {
                     TokenType::GREATER
                 };
-                Ok(self.construct_token_owned(token, start_position))
+                Ok(self.construct_token(token, start_position))
             }
             '/' => {
                 let start_position = self.position.clone();
@@ -101,14 +98,14 @@ impl Scanner {
                 } else {
                     TokenType::SLASH
                 };
-                Ok(self.construct_token_owned(token, start_position))
+                Ok(self.construct_token(token, start_position))
             }
             '"' => self.string(),
             '.' => {
                 let token = if self.peek().unwrap().is_numeric() {
                     self.number(true)
                 } else {
-                    self.construct_token_owned(TokenType::DOT, self.position.clone() - 1)
+                    self.construct_token(TokenType::DOT, self.position.clone() - 1)
                 };
                 Ok(token)
             }
@@ -121,17 +118,17 @@ impl Scanner {
                 {
                     self.advance()?;
                 }
-                Ok(self.construct_token_owned(TokenType::WHITESPACE, start_position))
+                Ok(self.construct_token(TokenType::WHITESPACE, start_position))
             }
             '\n' => {
                 self.position.line += 1;
                 self.position.column = 1;
-                Ok(self.construct_token_owned(TokenType::NEWLINE, self.position.clone() - 1))
+                Ok(self.construct_token(TokenType::NEWLINE, self.position.clone() - 1))
             }
             '0'..='9' => Ok(self.number(false)),
             'a'..='z' | 'A'..='Z' => Ok(self.identifier()),
             c => {
-                Err(PseudoError::ScannerError(self.position.clone(), "Unexpected char".into()))
+                Err(PseudoError::ScannerError(self.position.clone(), format!("Unexpected char {}", c).into()))
             }
         }
     }
@@ -158,27 +155,24 @@ impl Scanner {
 
     fn string(&mut self) -> Result<Token> {
         let start_position = self.position.clone();
-        while self.peek() != Some('"') && !self.at_end() {
-            if self.peek() == Some('\n') {
-                self.position.line += 1;
-                self.position.column = 1;
+        loop {
+            let c = self.advance()?;
+            if c == '"' {
+                let value = &self.source[self.start + 1..self.current - 1];
+                return Ok(self.construct_token(TokenType::STRING(Box::from(value)), start_position))
             }
-            self.advance()?;
+            if self.at_end() {
+                break;
+            }
         }
 
-        if self.at_end() {
-            return Err(PseudoError::ScannerError(self.position.clone(), "Unterminated string".into()));
-        }
-
-        self.advance()?;
-
-        let value = &self.source[self.start + 1..self.current - 1];
-        Ok(self.construct_token_owned(TokenType::STRING(Box::from(value)), start_position))
+        Err(PseudoError::ScannerError(self.position.clone(), "Unterminated string".into()))
     }
 
     fn number(&mut self, initial: bool) -> Token {
         let start_position = self.position.clone();
-        let mut bool = initial;
+        let mut is_float = initial;
+
         while let Some(c) = self.peek() {
             if !c.is_numeric() {
                 break;
@@ -187,24 +181,33 @@ impl Scanner {
         }
 
         if self.peek() == Some('.') {
-            bool = true;
+            is_float = true;
             self.advance();
-
-            while self.peek().unwrap().is_numeric() {
-                self.advance();
+     
+            loop { 
+                match self.peek() {
+                    Some(c) => {
+                        if c.is_numeric() {
+                            self.advance();
+                            continue;
+                        }
+                        break;
+                    },
+                    None => break,
+                }
             }
         }
 
         let literal = &self.source[self.start..self.current];
 
-        if bool {
-            self.construct_token_owned(
-                TokenType::FLOAT(literal.parse::<f64>().unwrap()),
+        if is_float {
+            self.construct_token(
+            TokenType::FLOAT(literal.parse::<f64>().unwrap()),
                 start_position,
             )
         } else {
-            self.construct_token_owned(
-                TokenType::INTEGER(literal.parse::<i128>().unwrap()),
+            self.construct_token(
+            TokenType::INTEGER(literal.parse::<i128>().unwrap()),
                 start_position,
             )
         }
@@ -219,13 +222,13 @@ impl Scanner {
         let literal = &self.source[self.start..self.current];
 
         match token::parse_keyword(literal) {
-            Some(token_type) => self.construct_token_owned(token_type.clone(), start_position),
+            Some(token_type) => self.construct_token(token_type.clone(), start_position),
             None => self
-                .construct_token_owned(TokenType::IDENTIFIER(Box::from(literal)), start_position),
+                .construct_token(TokenType::IDENTIFIER(Box::from(literal)), start_position),
         }
     }
 
-    fn construct_token_owned(&self, token: TokenType, start_position: Position) -> Token {
+    fn construct_token(&self, token: TokenType, start_position: Position) -> Token {
         Token::new(token, start_position, &self.position)
     }
 }
