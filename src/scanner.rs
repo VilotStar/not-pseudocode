@@ -39,17 +39,17 @@ impl Scanner {
     fn scan_token(&mut self) -> Result<Token> {
         let c = self.advance()?;
         match c {
-            '(' => Ok(self.construct_token_owned(TokenType::LPAREN, (self.position.clone() - 1))),
-            ')' => Ok(self.construct_token_owned(TokenType::RPAREN, (self.position.clone() - 1))),
-            '{' => Ok(self.construct_token_owned(TokenType::LBRACE, (self.position.clone() - 1))),
-            '}' => Ok(self.construct_token_owned(TokenType::RBRACE, (self.position.clone() - 1))),
-            ',' => Ok(self.construct_token_owned(TokenType::COMMA, (self.position.clone() - 1))),
-            '-' => Ok(self.construct_token_owned(TokenType::MINUS, (self.position.clone() - 1))),
-            '+' => Ok(self.construct_token_owned(TokenType::PLUS, (self.position.clone() - 1))),
+            '(' => Ok(self.construct_token_owned(TokenType::LPAREN, self.position.clone() - 1)),
+            ')' => Ok(self.construct_token_owned(TokenType::RPAREN, self.position.clone() - 1)),
+            '{' => Ok(self.construct_token_owned(TokenType::LBRACE, self.position.clone() - 1)),
+            '}' => Ok(self.construct_token_owned(TokenType::RBRACE, self.position.clone() - 1)),
+            ',' => Ok(self.construct_token_owned(TokenType::COMMA, self.position.clone() - 1)),
+            '-' => Ok(self.construct_token_owned(TokenType::MINUS, self.position.clone() - 1)),
+            '+' => Ok(self.construct_token_owned(TokenType::PLUS, self.position.clone() - 1)),
             ';' => {
-                Ok(self.construct_token_owned(TokenType::SEMICOLON, (self.position.clone() - 1)))
+                Ok(self.construct_token_owned(TokenType::SEMICOLON, self.position.clone() - 1))
             }
-            '*' => Ok(self.construct_token_owned(TokenType::STAR, (self.position.clone() - 1))),
+            '*' => Ok(self.construct_token_owned(TokenType::STAR, self.position.clone() - 1)),
             '!' => {
                 let start_position = self.position.clone();
                 let token = if self.peek() == Some('=') {
@@ -108,7 +108,7 @@ impl Scanner {
                 let token = if self.peek().unwrap().is_numeric() {
                     self.number(true)
                 } else {
-                    self.construct_token(TokenType::DOT, &(self.position.clone() - 1))
+                    self.construct_token_owned(TokenType::DOT, self.position.clone() - 1)
                 };
                 Ok(token)
             }
@@ -126,7 +126,7 @@ impl Scanner {
             '\n' => {
                 self.position.line += 1;
                 self.position.column = 1;
-                Ok(self.construct_token(TokenType::NEWLINE, &(self.position.clone() - 1)))
+                Ok(self.construct_token_owned(TokenType::NEWLINE, self.position.clone() - 1))
             }
             '0'..='9' => Ok(self.number(false)),
             'a'..='z' | 'A'..='Z' => Ok(self.identifier()),
@@ -226,10 +226,6 @@ impl Scanner {
     }
 
     fn construct_token_owned(&self, token: TokenType, start_position: Position) -> Token {
-        Token::new_owned_position(token, start_position, &self.position)
-    }
-    
-    fn construct_token(&self, token: TokenType, start_position: &Position) -> Token {
         Token::new(token, start_position, &self.position)
     }
 }

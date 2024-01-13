@@ -9,7 +9,7 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new_owned_position(
+    pub fn new(
         r#type: TokenType,
         start_position: Position,
         end_position: &Position,
@@ -17,12 +17,6 @@ impl Token {
         Self {
             r#type,
             position: (start_position, end_position.clone()),
-        }
-    }
-    pub fn new(r#type: TokenType, start_position: &Position, end_position: &Position) -> Self {
-        Self {
-            r#type,
-            position: (start_position.clone(), end_position.clone()),
         }
     }
 }
