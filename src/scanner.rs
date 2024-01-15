@@ -1,9 +1,7 @@
 use crate::{
     token::{self, Token, TokenType},
-    Position, error::PseudoError,
+    Position, error::{PseudoError, Result},
 };
-
-pub type Result<T> = std::result::Result<T, PseudoError>;
 
 pub struct Scanner {
     source: String,
