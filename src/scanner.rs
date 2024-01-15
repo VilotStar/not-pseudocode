@@ -10,12 +10,16 @@ pub struct Scanner {
     position: Position,
     start: usize,
     current: usize,
+    eof_reached: bool,
 }
 
 impl Iterator for Scanner {
     type Item = Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.eof_reached {
+            return None;
+        }
         self.start = self.current;
         Some(self.scan_token())
     }
@@ -30,10 +34,15 @@ impl Scanner {
             start: 0,
             current: 0,
             position,
+            eof_reached: false,
         }
     }
 
     fn scan_token(&mut self) -> Result<Token> {
+        if self.at_end() {
+            self.eof_reached = true;
+            return Ok(self.construct_token(TokenType::EOF, self.position.clone()));
+        }
         let c = self.advance()?;
         match c {
             '(' => Ok(self.construct_token(TokenType::LPAREN, self.position.clone() - 1)),
